@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
 
+import java.util.List;
 import java.util.UUID;
 
 @Entity
@@ -11,7 +12,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class Bookings {
+public class Booking {
     @Id
     @GeneratedValue(generator = "uuid2")
     @Column(name = "id")
@@ -19,5 +20,12 @@ public class Bookings {
 
 
     private UUID userID;
+
+    private Status status;
+
+    private double price;
+
+    @OneToMany(mappedBy = "booking", cascade = CascadeType.ALL)
+    private List<Ticket> tickets;
 
 }

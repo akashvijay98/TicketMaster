@@ -11,7 +11,7 @@ import java.util.UUID;
 
 @Getter
 @Setter
-public class Events {
+public class Event {
     @Id
     @GeneratedValue(generator = "uuid2")
     @Column(name = "id")

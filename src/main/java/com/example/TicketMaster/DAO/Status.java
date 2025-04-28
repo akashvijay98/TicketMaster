@@ -1,2 +1,7 @@
-package com.example.TicketMaster.DAO;public enum Status {
+package com.example.TicketMaster.DAO;
+
+public enum Status {
+    AVAILABLE,
+    LOCKED,
+    CONFIRMED
 }

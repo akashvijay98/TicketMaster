@@ -1,2 +1,11 @@
-package com.example.TicketMaster.Repository;public class TicketRepository {
+package com.example.TicketMaster.repository;
+
+import com.example.TicketMaster.DAO.Ticket;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import java.util.UUID;
+
+@Repository
+public interface TicketRepository extends JpaRepository<Ticket, UUID> {
 }
