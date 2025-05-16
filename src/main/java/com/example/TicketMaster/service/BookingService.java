@@ -30,50 +30,57 @@ public class BookingService {
     public String reserve(UUID ticketId, UUID userId){
         Ticket ticket;
 
-        String lockId = UUID.randomUUID().toString();
-        System.out.println("lockID====="+lockId);
-        boolean lock = redisLockService.acquireLock(ticketId, lockId, 40);
+
+        boolean lock = redisLockService.acquireLock(ticketId, userId, 40);
         System.out.println("Lock==========="+lock);
 
         if (!lock) {
             throw new RuntimeException("Ticket is currently being reserved by another user. Try again later.");
         }
 
-
-
-        List<Ticket> ticketList = ticketRepository.findAll();
-        for(Ticket ticketItem:ticketList) {
-            if (ticketItem.getId().equals(ticketId)) {
-                ticket = ticketItem;
-                System.out.println("ticket details" + ticketItem.toString());
-
-                if (!ticket.getStatus().equals(Status.AVAILABLE)) {
-                    throw new RuntimeException("Ticket not available");
-                }
-                Booking booking = new Booking();
-                booking.setUserID(userId);
-
-                booking.setPrice(price);
-                booking.setStatus(Status.LOCKED);
-
-                List<Ticket> tickets = new ArrayList<>();
-                tickets.add(ticket);
-
-                booking.setTickets(tickets);
-
-                booking = bookingRepository.save(booking);
-
-                ticket.setBooking(booking);
-                ticket.setStatus(Status.AVAILABLE);
-
-                ticketRepository.save(ticket);
-
-                return booking.getId().toString();
-
-            }
+        return "ticket locked";
 
         }
-            return "booking failed";
 
+
+    @Transactional
+    public String confirmBooking(UUID ticketId, UUID userId) {
+        // Ensure user holds the lock
+        if (!redisLockService.isLockedByUser(ticketId, userId)) {
+            throw new RuntimeException("Unauthorized or expired reservation");
         }
+
+        System.out.println("All tickets: ");
+
+        List<Ticket> tickets = ticketRepository.findAll();
+        for(Ticket item: tickets){
+            System.out.println(item);
+        }
+
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+
+        if (!ticket.getStatus().equals(Status.AVAILABLE)) {
+            throw new RuntimeException("Ticket already booked");
+        }
+
+        // Create booking
+        Booking booking = new Booking();
+        booking.setUserID(userId);
+        booking.setPrice(price);
+        booking.setStatus(Status.BOOKED);
+        booking.setTickets(List.of(ticket));
+
+        booking = bookingRepository.save(booking);
+
+        // Update ticket to BOOKED and link to booking
+        ticket.setStatus(Status.BOOKED);
+        ticket.setBooking(booking);
+        ticketRepository.save(ticket);
+
+        // Optionally release lock early (otherwise TTL will clear it)
+        redisLockService.releaseLock(ticketId, userId);
+
+        return booking.getId().toString();
     }
+}

@@ -12,27 +12,32 @@ import java.util.UUID;
 public class RedisLockService {
 
     @Autowired
-    RedisTemplate<String, String> redisTemplate;
+    private RedisTemplate<String, String> redisTemplate;
+
     private static final String LOCK_PREFIX = "ticket-lock:";
 
-    public boolean acquireLock(UUID ticketId, String lockId, long timeoutSec){
+    public boolean acquireLock(UUID ticketId, UUID userId, long ttlSeconds) {
         String key = LOCK_PREFIX + ticketId;
-
-
+        String value = userId.toString();
         return Boolean.TRUE.equals(
-                redisTemplate.opsForValue().setIfAbsent(key, lockId, Duration.ofSeconds(timeoutSec))
+                redisTemplate.opsForValue().setIfAbsent(key, value, Duration.ofSeconds(ttlSeconds))
         );
-
     }
 
-    public void releaseLock(UUID ticketId, String lockId){
+    public boolean isLockedByUser(UUID ticketId, UUID userId) {
         String key = LOCK_PREFIX + ticketId;
+        String storedUserId = redisTemplate.opsForValue().get(key);
+        return userId.toString().equals(storedUserId);
+    }
 
-        String currentLockId = (String )redisTemplate.opsForValue().get(key);
-        if (lockId.equals(currentLockId)) {
+    public void releaseLock(UUID ticketId, UUID userId) {
+        String key = LOCK_PREFIX + ticketId;
+        String storedUserId = redisTemplate.opsForValue().get(key);
+        if (userId.toString().equals(storedUserId)) {
             redisTemplate.delete(key);
         }
     }
+
     @PostConstruct
     public void testRedisConnection() {
         try {

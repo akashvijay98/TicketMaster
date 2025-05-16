@@ -22,4 +22,15 @@ public class BookingController {
         return bookingService.reserve(ticketId, userId);
     }
 
+
+    @PostMapping("/confirm")
+    public String confirmBooking(@RequestParam UUID ticketId, @RequestParam UUID userId) {
+        try {
+            String bookingId = bookingService.confirmBooking(ticketId, userId);
+            return "Booking confirmed! ID: " + bookingId;
+        } catch (RuntimeException e) {
+            return "Booking failed: " + e.getMessage();
+        }
+    }
+
 }

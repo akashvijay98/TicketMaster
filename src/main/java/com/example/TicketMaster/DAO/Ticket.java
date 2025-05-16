@@ -7,7 +7,7 @@ import lombok.Setter;
 import java.util.UUID;
 
 @Entity
-@Table(name = "Ticket")
+@Table(name = "ticket")
 
 @Getter
 @Setter
@@ -23,10 +23,11 @@ public class Ticket {
     private Event event;
 
     @ManyToOne
-    @JoinColumn(name = "booking_id", nullable = false)
+    @JoinColumn(name = "booking_id", nullable = true)
     private Booking booking;
 
-    private int seatNo;
+    @Column(name = "seat_no")
+    private String seatNo;
 
     @Enumerated(EnumType.STRING)
     private Status status;
